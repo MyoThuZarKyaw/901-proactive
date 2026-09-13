@@ -9,13 +9,13 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # COPY your model and the FASTAPI code
-COPY gateway_ai_model_v2.joblib .
-COPY main.py .
+COPY cb_controller_model.joblib .
+COPY app.py .
 
 # Expose the port FASTAPI runs on
 EXPOSE 8000
 
 # Start the service
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
 
 
