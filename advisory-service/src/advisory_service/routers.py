@@ -1,16 +1,18 @@
 from fastapi import APIRouter
 
-app_router = APIRouter()
+from .services import RedisPublisherService
 
-api_v1_router = APIRouter(prefix="/api/v1")
-api_v1_router.include_router(app_router)
+_app_router = APIRouter()
+
+_api_v1_router = APIRouter(prefix="/api/v1")
+_api_v1_router.include_router(_app_router)
 
 context_router = APIRouter(prefix="/advisory")
-context_router.include_router(api_v1_router)
+context_router.include_router(_api_v1_router)
 
 
 @context_router.get("/")
-def ping():
+def welcome():
     return "Welcome to advisory service!"
 
 
@@ -19,9 +21,13 @@ def ping():
     return "PONG"
 
 
-@app_router.post("/advise")
+@_app_router.post("/advise")
 def advise():
     """Get current matric data, ask the brain and action accordingly"""
+
+    publisher = RedisPublisherService()
+    publisher.publish()
+
     return {
         "matric": "The data got from prometious and passed to the brain",
         "response": "The response return from the braind",
