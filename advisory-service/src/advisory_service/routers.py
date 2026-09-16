@@ -1,35 +1,55 @@
-from fastapi import APIRouter
+from typing import Annotated
 
+from fastapi import APIRouter, Depends, status
+
+from .dependencies import get_redis_publisher
+from .models import AdviseResponse, CircuitBreakerPayload
 from .services import RedisPublisherService
 
-_app_router = APIRouter()
-
-_api_v1_router = APIRouter(prefix="/api/v1")
-_api_v1_router.include_router(_app_router)
-
-context_router = APIRouter(prefix="/advisory")
-context_router.include_router(_api_v1_router)
+# Export a single router for this domain/feature
+router = APIRouter(prefix="/advisory", tags=["Advisory"])
 
 
-@context_router.get("/")
-def welcome():
+@router.get(
+    "/",
+    summary="Root advisory welcome",
+    response_model=str,
+)
+async def welcome() -> str:
     return "Welcome to advisory service!"
 
 
-@context_router.get("/ping")
-def ping():
+@router.get(
+    "/ping",
+    summary="Health check",
+    response_model=str,
+)
+async def ping() -> str:
     return "PONG"
 
 
-@_app_router.post("/advise")
-def advise():
-    """Get current matric data, ask the brain and action accordingly"""
+@router.post(
+    "/advise",
+    response_model=AdviseResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Process metrics and publish advisory event",
+)
+async def advise(
+    publisher: Annotated[RedisPublisherService, Depends(get_redis_publisher)],
+) -> AdviseResponse:
 
-    publisher = RedisPublisherService()
-    publisher.publish()
+    # Now dynamic instead of hardcoded
+    alert = CircuitBreakerPayload(
+        target_service="payment-service",
+        status="DEGRADED",
+        reason="Average latency > 3500ms detected over last 10s",
+    )
 
-    return {
-        "matric": "The data got from prometious and passed to the brain",
-        "response": "The response return from the braind",
-        "event": "The event happened based on the response",
-    }
+    """Gather Prometheus metrics, evaluate via the brain engine, and publish actions."""
+    await publisher.publish(channel="circuit-breaker-channel", payload=alert)
+
+    return AdviseResponse(
+        metric="The data retrieved from Prometheus and passed to the brain",
+        response="The response returned from the brain",
+        event="The event triggered based on the response",
+    )

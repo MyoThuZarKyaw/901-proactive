@@ -1,9 +1,32 @@
-from fastapi import APIRouter, FastAPI
-from .routers import context_router
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+import redis.asyncio as aioredis
+from fastapi import FastAPI
 
-app.include_router(context_router)
+from .config import settings
+from .routers import router as advisory_router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # STARTUP: Create ONE pool for the entire application lifetime
+    app.state.redis = aioredis.Redis(
+        host=settings.redis_host,
+        port=settings.redis_port,
+        decode_responses=settings.redis_decode_response,
+    )
+    yield
+    # SHUTDOWN: Gracefully close connections
+    await app.state.redis.close()
+
+
+app = FastAPI(lifespan=lifespan)
+
+app.include_router(advisory_router, prefix="/api/v1")
+# This creates:
+#   GET  /api/v1/advisory/
+#   GET  /api/v1/advisory/ping
+#   POST /api/v1/advisory/advise
 
 
 def main() -> None:
