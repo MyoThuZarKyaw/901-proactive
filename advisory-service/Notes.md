@@ -17,3 +17,10 @@ docker exec -it redis redis-cli SUBSCRIBE circuit-breaker-channel
 # Publish message to "circuit-breaker-channel"
 docker exec -it redis redis-cli PUBLISH circuit-breaker-channel "payment-service"
 ```
+
+*Podman Commands*
+```shell
+# To restart podman machines
+podman machine stop
+podman machine start
+```

@@ -44,7 +44,7 @@ async def advise(
 
     # Now dynamic instead of hardcoded
     alert = CircuitBreakerPayload(
-        target_service="payment-service",
+        target_service="inventory-service",
         status="DEGRADED",
         reason="Average latency > 3500ms detected over last 10s",
     )
