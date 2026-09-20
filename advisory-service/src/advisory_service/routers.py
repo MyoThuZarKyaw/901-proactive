@@ -1,10 +1,14 @@
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
 from .dependencies import get_redis_publisher
+from .exceptions import RedisPubishException
 from .models import AdviseResponse, CircuitBreakerPayload
 from .services import RedisPublisherService
+
+logger = logging.getLogger(__name__)
 
 # Export a single router for this domain/feature
 router = APIRouter(prefix="/advisory", tags=["Advisory"])
@@ -45,8 +49,14 @@ async def advise(
         reason="Average latency > 3500ms detected over last 10s",
     )
 
-    """Gather Prometheus metrics, evaluate via the brain engine, and publish actions."""
-    await publisher.publish(channel="circuit-breaker-channel", payload=alert)
+    try:
+        """Gather Prometheus metrics, evaluate via the brain engine, and publish actions."""
+        await publisher.publish(channel="circuit-breaker-channel", payload=alert)
+    except Exception:
+        logger.exception("Redis publisher encountered an unhandled exception.")
+        raise RedisPubishException(
+            message="Advisory event distribution failed. Service unavailble."
+        )
 
     return AdviseResponse(
         metric="The data retrieved from Prometheus and passed to the brain",
