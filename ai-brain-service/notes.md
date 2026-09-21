@@ -14,3 +14,9 @@ gateway-ai-brain
 podman ps
 
 podman logs ai-brain
+
+
+
+### Run the fast API
+
+uvicorn app:app --reload --port 8000
