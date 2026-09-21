@@ -1,0 +1,14 @@
+{
+    "files.exclude": {
+        "**/__pycache__": true
+    },
+    "editor.codeLens": true,
+    "[python]": {
+        // "editor.defaultFormatter": "astral-sh.ruff",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports.ruff": "always",
+            "source.fixAll.ruff": "always"
+        }
+    }
+}
