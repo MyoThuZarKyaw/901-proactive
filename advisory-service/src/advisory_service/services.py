@@ -25,9 +25,6 @@ class RedisPublisherService:
 
     def __init__(self, redis_client: aioredis.Redis):
         self._r = redis_client
-        #  docker exec -it redis redis-cli ping
-        #  docker exec -it redis redis-cli SUBSCRIBE circuit-breaker-channel
-        #  docker exec -it redis redis-cli PUBLISH circuit-breaker-channel "payment-service"
 
     async def publish(
         self,

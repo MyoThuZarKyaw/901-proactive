@@ -9,7 +9,6 @@ from fastapi.responses import JSONResponse
 from .config import settings
 from .exceptions import ApplicationException
 from .routers import router as advisory_router
-from .services import PredictionService, PrometheusQueryService, RedisPublisherService
 
 logger = logging.getLogger(__name__)
 
