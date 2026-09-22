@@ -10,9 +10,15 @@ APP_ENV = os.getenv("APP_ENV", "dev").lower()
 class Settings(BaseSettings):
     app_env: str = APP_ENV
 
-    redis_host: str
-    redis_port: int
-    redis_decode_response: bool = True
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_DECODE_RESPONSE: bool = True
+    REDIS_ADVISORY_ALERT_CHANNEL: str = "circuit-breaker-channel"
+
+    PROMETHEUS_BASE_URL: str = "http://localhost:9090"
+    PROMETHEUS_QUERY_SERVICE_NAMES: list[str] = []
+
+    MODEL_BUNDLE_FILE: str = "models/proactive_gateway_mdv3_v1.joblib"
 
     # Automatically load the corresponding .env.<env> file
     model_config = SettingsConfigDict(
