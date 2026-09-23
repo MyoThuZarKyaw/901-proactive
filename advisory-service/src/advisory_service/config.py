@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     PROMETHEUS_QUERY_SERVICE_NAMES: list[str] = []
 
     MODEL_BUNDLE_FILE: str = "models/proactive_gateway_mdv3_v1.joblib"
+    PREDICTION_SCHEDULE_INTERVAL_SECONDS: int = 10
 
     # Automatically load the corresponding .env.<env> file
     model_config = SettingsConfigDict(

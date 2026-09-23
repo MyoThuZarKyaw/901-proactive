@@ -10,8 +10,8 @@ import redis.asyncio as aioredis
 import requests
 from pydantic import BaseModel
 
-from .exceptions import ApplicationException
-from .models import (
+from advisory_service.exceptions import ApplicationException
+from advisory_service.models import (
     PredictionInput,
     PredictionOutput,
     PredictionOutputState,

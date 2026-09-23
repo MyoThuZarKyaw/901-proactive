@@ -158,13 +158,14 @@ async def predict_metrics(
         if predicted_result.state in {
             PredictionOutputState.DEGRADED,
             PredictionOutputState.FAILED,
-            # PredictionOutputState.HEALTHY,
+            PredictionOutputState.HEALTHY,
         }:
-            # Now dynamic instead of hardcoded
             event = AdvisoryEvent(
                 target_service=service_name, status=predicted_result.state
             )
-
+            logger.info(
+                f"{predicted_result.state} state has been detected. Sending alert..."
+            )
             try:
                 await publisher.publish(
                     channel=settings.REDIS_ADVISORY_ALERT_CHANNEL, payload=event
