@@ -1,4 +1,5 @@
 import logging
+import os
 import uuid
 from contextvars import ContextVar
 
@@ -83,6 +84,13 @@ def do_prediction(service_name) -> AdvisoryEvent:
     if df.empty:
         return
 
+    if(container.settings.EXPORT_TIMESERIES_DATA):
+        # Print as csv
+        output_file = f"raw_data/fetch_prometheus_{service_name}_data.csv"
+        # Ensure the parent directory exists before saving (e.g., 'raw_data/')
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+        df.to_csv(output_file, index=False)
+
     # Get the latest row as Pandas series (flat dictionary like {'target_cpu': 0.1061, 'target_mem': 0.883, 'target_latency': 7.81})
     last_metric_row = df.iloc[-1].replace({np.nan: None}).to_dict()
 
@@ -92,6 +100,7 @@ def do_prediction(service_name) -> AdvisoryEvent:
         features=last_metric_row,
         timestamp=last_metric_row["timestamp"],
     )
+    schedulers_log.info("Prediction payload - %s", prediction_payload.model_dump_json())
     predicted_result = container.prediction_service.predict_health(prediction_payload)
 
     event = None

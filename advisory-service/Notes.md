@@ -24,3 +24,22 @@ docker exec -it redis redis-cli PUBLISH circuit-breaker-channel "payment-service
 podman machine stop
 podman machine start
 ```
+
+*Modules and their main responsibilities*
+- config.py
+  - It loads all the settings required for the application from the config files, .env.dev, .env.prod, etc...
+- __init__.py
+  - Main module file for the applications. It does all the bootstrap things for the applications such as
+    - loading brain model
+    - loading configs
+    - running schedulers for monitoring or prediction
+- routers.py
+  - Host of the all RestAPIs methods supported by the applications
+- schedulers.py
+  - Implementation of schedules required for the application such as prediction schedule which is run from `__init__` module
+- services.py
+  - All the core business logic are implemented in here such as, querying metric data from prometheus, building payload to pass to brain
+  - for prediction, sending alert message to redis
+- container.py
+  - It is a service locator instance which hold all the singleton service instances. So, whenever a service is needed, the client code should get it from
+  - the container instead of creating it by its own.

@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     MODEL_BUNDLE_FILE: str = "models/proactive_gateway_mdv3_v1.joblib"
     PREDICTION_SCHEDULE_INTERVAL_SECONDS: int = 10
 
+    EXPORT_TIMESERIES_DATA: bool = False
+
     # Automatically load the corresponding .env.<env> file
     model_config = SettingsConfigDict(
         env_file=f".env.{APP_ENV}",
