@@ -1,74 +1,81 @@
 import logging
 import os
-import uuid
-from contextvars import ContextVar
 
 import numpy as np
 from fastapi.concurrency import run_in_threadpool
 
 from advisory_service.container import container
 from advisory_service.exceptions import RedisPubishException
+from advisory_service.logger_config import with_correlation_id, with_correlation_subid
 from advisory_service.models import (
     AdvisoryEvent,
     PredictionInput,
     PredictionOutputState,
 )
 
-# Define a ContextVar to safely store the ID per prediction
-correlation_id_ctx: ContextVar[str] = ContextVar("correlation_id", default="")
+# # Define a ContextVar to safely store the ID per prediction
+# correlation_id_ctx: ContextVar[str] = ContextVar("correlation_id", default="")
 
 
-# Create the Logging Filter
-class CorrelationIdFilter(logging.Filter):
-    def filter(self, record):
-        # Fetch the current ID from the context window
-        record.correlation_id = correlation_id_ctx.get()
-        return True
+# # Create the Logging Filter
+# class CorrelationIdFilter(logging.Filter):
+#     def filter(self, record):
+#         # Fetch the current ID from the context window
+#         record.correlation_id = correlation_id_ctx.get()
+#         return True
 
 
-# Configure the Logging System
-handler = logging.StreamHandler()
-handler.addFilter(CorrelationIdFilter())
+# # Configure the Logging System
+# handler = logging.StreamHandler()
+# handler.addFilter(CorrelationIdFilter())
 
-# Include '%(correlation_id)s' in format string
-formatter = logging.Formatter(
-    "[%(asctime)s] [%(levelname)s] [ID: %(correlation_id)s] %(message)s"
-)
-handler.setFormatter(formatter)
+# # Include '%(correlation_id)s' in format string
+# formatter = logging.Formatter(
+#     "[%(asctime)s] [%(levelname)s] [ID: %(correlation_id)s] %(message)s"
+# )
+# handler.setFormatter(formatter)
 
-schedulers_log = logging.getLogger("schedulers_logger")
-schedulers_log.addHandler(handler)
-schedulers_log.setLevel(logging.INFO)
+# schedulers_log = logging.getLogger("schedulers_logger")
+# schedulers_log.addHandler(handler)
+# schedulers_log.setLevel(logging.INFO)
+
+schedulers_log = logging.getLogger(__name__)
 
 
+@with_correlation_id()
 async def predict_service_metrics():
-    correlation_id_ctx.set(uuid.uuid4().hex)
+    # correlation_id_ctx.set(uuid.uuid4().hex)
     schedulers_log.info("Predicting the status of services, started.")
     services_to_process = container.settings.PROMETHEUS_QUERY_SERVICE_NAMES
     for service_name in services_to_process:
-        schedulers_log.info(f"Predicting for the service name, {service_name}.")
-        event = await run_in_threadpool(do_prediction, service_name=service_name)
-        if event is not None:
-            schedulers_log.info(
-                f"Service, {service_name}, is unhealthy and in {event.status} state."
-            )
-            schedulers_log.info("Sending alert - %s", event.model_dump_json())
-            try:
-                await container.redis_publisher_service.publish(
-                    channel=container.settings.REDIS_ADVISORY_ALERT_CHANNEL,
-                    payload=event,
-                )
-            except Exception:
-                schedulers_log.exception(
-                    "Redis publisher encountered an unhandled exception."
-                )
-                raise RedisPubishException(
-                    message="Advisory event distribution failed. Service unavailable."
-                )
-        else:
-            schedulers_log.info(f"Service, {service_name}, is healthy")
-        schedulers_log.info(f"Predicting for the service, {service_name}, completed.")
+        await predict_for_service(service_name=service_name)
     schedulers_log.info("Predicting the status of services, done.")
+
+
+@with_correlation_subid(suffix_arg="service_name")
+async def predict_for_service(service_name):
+    schedulers_log.info(f"Predicting for the service name, {service_name}.")
+    event = await run_in_threadpool(do_prediction, service_name=service_name)
+    if event is not None:
+        schedulers_log.info(
+            f"Service, {service_name}, is unhealthy and in {event.status} state."
+        )
+        schedulers_log.info("Sending alert - %s", event.model_dump_json())
+        try:
+            await container.redis_publisher_service.publish(
+                channel=container.settings.REDIS_ADVISORY_ALERT_CHANNEL,
+                payload=event,
+            )
+        except Exception:
+            schedulers_log.exception(
+                "Redis publisher encountered an unhandled exception."
+            )
+            raise RedisPubishException(
+                message="Advisory event distribution failed. Service unavailable."
+            )
+    else:
+        schedulers_log.info(f"Service, {service_name}, is healthy")
+    schedulers_log.info(f"Predicting for the service, {service_name}, completed.")
 
 
 def do_prediction(service_name) -> AdvisoryEvent:
@@ -84,7 +91,7 @@ def do_prediction(service_name) -> AdvisoryEvent:
     if df.empty:
         return
 
-    if(container.settings.EXPORT_TIMESERIES_DATA):
+    if container.settings.EXPORT_TIMESERIES_DATA:
         # Print as csv
         output_file = f"raw_data/fetch_prometheus_{service_name}_data.csv"
         # Ensure the parent directory exists before saving (e.g., 'raw_data/')
@@ -107,7 +114,7 @@ def do_prediction(service_name) -> AdvisoryEvent:
     if predicted_result.state in {
         PredictionOutputState.DEGRADED,
         PredictionOutputState.FAILED,
-        # PredictionOutputState.HEALTHY,
+        PredictionOutputState.HEALTHY,
     }:
         event = AdvisoryEvent(
             target_service=service_name, status=predicted_result.state

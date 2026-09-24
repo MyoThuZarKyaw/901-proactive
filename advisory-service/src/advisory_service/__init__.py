@@ -10,10 +10,9 @@ from fastapi.responses import JSONResponse
 from advisory_service.config import settings
 from advisory_service.container import container
 from advisory_service.exceptions import ApplicationException
+from advisory_service.logger_config import CorrelationIdMiddleware, setup_global_logging
 from advisory_service.routers import router as advisory_router
 from advisory_service.schedulers import predict_service_metrics
-
-logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -22,6 +21,12 @@ async def lifespan(app: FastAPI):
     # ==========================================
     # --- STARTUP LOGIC ---
     # ==========================================
+
+    # - Configure Logging
+    setup_global_logging()
+
+    logger = logging.getLogger(__name__)
+
     logger.info("Starting up application...")
 
     logger.info("Initializing dependencies...")
@@ -75,7 +80,13 @@ async def lifespan(app: FastAPI):
     await app.state.redis.close()
 
 
+# -------------------------------------------------------------------
+# FastAPI Setup
+# -------------------------------------------------------------------
 app = FastAPI(lifespan=lifespan)
+app.add_middleware(CorrelationIdMiddleware)
+
+logger = logging.getLogger(__name__)
 
 
 # Registering Exception Handlers
