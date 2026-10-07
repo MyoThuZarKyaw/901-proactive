@@ -89,6 +89,7 @@ class PredictionOutput(BaseModel):
 
 
 class AdvisoryEvent(BaseModel):
+    event_id: str = Field(..., description="Event ID")
     target_service: str = Field(..., description="Targeted service name")
     status: PredictionOutputState = Field(..., description="Degraded or Failed?")
     reason: str = Field(None)  # Defaults to None (Optional)

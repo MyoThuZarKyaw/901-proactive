@@ -1,5 +1,6 @@
 import logging
 import os
+import uuid
 
 import numpy as np
 from fastapi.concurrency import run_in_threadpool
@@ -114,9 +115,11 @@ def do_prediction(service_name) -> AdvisoryEvent:
     if predicted_result.state in {
         PredictionOutputState.DEGRADED,
         PredictionOutputState.FAILED,
-        PredictionOutputState.HEALTHY,
+        # PredictionOutputState.HEALTHY,
     }:
         event = AdvisoryEvent(
-            target_service=service_name, status=predicted_result.state
+            event_id=uuid.uuid4().hex,
+            target_service=service_name,
+            status=predicted_result.state,
         )
     return event
