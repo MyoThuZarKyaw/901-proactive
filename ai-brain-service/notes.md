@@ -14,3 +14,20 @@ gateway-ai-brain
 podman ps
 
 podman logs ai-brain
+
+
+### Recreate the .venv
+
+python3 -m venv .venv
+
+### pip ativate
+source .vevn/bin/activate
+
+### install in requirements
+pip install -r requirements.txt
+
+
+### Run the server
+uvicorn app:app --reload --port 8000
+
+http://localhost:8000/docs

@@ -110,6 +110,7 @@ def do_prediction(service_name) -> AdvisoryEvent:
     )
     schedulers_log.info("Prediction payload - %s", prediction_payload.model_dump_json())
     predicted_result = container.prediction_service.predict_health(prediction_payload)
+    schedulers_log.info("Prediction result - %s", predicted_result)
 
     event = None
     if predicted_result.state in {
