@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     REDIS_PORT: int
     REDIS_DECODE_RESPONSE: bool = True
     REDIS_ADVISORY_ALERT_CHANNEL: str = "circuit-breaker-channel"
+    REDIS_ADVISORY_ALERT_ON: bool = True
 
     PROMETHEUS_BASE_URL: str = "http://localhost:9090"
     PROMETHEUS_QUERY_SERVICE_NAMES: list[str] = []

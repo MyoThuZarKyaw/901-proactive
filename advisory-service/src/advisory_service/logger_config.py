@@ -339,3 +339,25 @@ def with_correlation_subid(
             return sync_wrapper
 
     return decorator
+
+
+def setup_scheduler_logger():
+    file_handler = SizeAndTimeRotatingFileHandler(
+        filename="logs/prediction-results.log",
+        max_bytes=10 * 1024 * 1024,
+        encoding="utf-8",
+    )
+
+    sched_logger = logging.getLogger("scheduler")
+    sched_handler = logging.FileHandler(file_handler)
+    formatter = logging.Formatter(
+        "%(asctime)s [%(levelname)s] [%(correlation_id)s] %(name)s: %(message)s"
+    )
+    sched_handler.setFormatter(formatter)
+
+    sched_logger.addHandler(sched_handler)
+    sched_logger.setLevel(logging.INFO)
+
+    sched_logger.propagate = True
+
+    return sched_logger
