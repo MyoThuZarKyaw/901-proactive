@@ -1,0 +1,13 @@
+# This configuration is intended for development purpose, it's **your** responsibility to harden it for production
+name: 901_prt_services
+services:
+  advisory-service:
+    extends:
+      file: ./docker-compose.yml
+      service: advisory-service
+    networks:
+      - 901-reactive-gateway
+
+networks:
+  901-reactive-gateway:
+    external: true

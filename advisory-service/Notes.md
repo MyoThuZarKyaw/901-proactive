@@ -43,3 +43,18 @@ podman machine start
 - container.py
   - It is a service locator instance which hold all the singleton service instances. So, whenever a service is needed, the client code should get it from
   - the container instead of creating it by its own.
+
+
+*How to run in docker*
+```shell
+cd advisory-service
+docker compose build
+docker compose up
+# or: podman build -t advisory-service . && podman run -p 8000:8000 --env-file .env.docker advisory-service
+
+or
+
+cd advisory-service
+npm run python:docker:dev
+npm run prt-services:up
+```

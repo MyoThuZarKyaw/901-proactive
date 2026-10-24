@@ -1,0 +1,26 @@
+# Python / build
+__pycache__/
+*.py[oc]
+*.egg-info/
+build/
+dist/
+.venv/
+uv-cache/
+
+# Git / editors / OS
+.git/
+.gitignore
+.idea/
+.vscode/
+.DS_Store
+
+# Logs and local exports (mounted as volume at runtime instead)
+logs/*.log
+raw_data/
+utils/__pycache__/
+
+# Local envs baked selectively via Dockerfile COPY (keep image explicit).
+# .env.dev / .env.prod / .env.docker are copied intentionally; ignore the rest.
+.env
+.env.local
+.env.*.local
