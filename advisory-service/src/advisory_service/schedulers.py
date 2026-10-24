@@ -34,7 +34,9 @@ async def predict_service_metrics():
 
 @with_correlation_subid(suffix_arg="service_name")
 async def predict_for_service(service_name, start_ts, end_ts):
-    logger.info(f"===== #[Predicting for the service name, {service_name}.")
+    logger.info(
+        f"===== #[Predicting for the service name, {service_name}(${start_ts}, ${end_ts})."
+    )
     event = await run_in_threadpool(
         do_prediction, service_name=service_name, start_ts=start_ts, end_ts=end_ts
     )
