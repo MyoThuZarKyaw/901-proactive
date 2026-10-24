@@ -201,7 +201,7 @@ class PrometheusQueryService:
         # Fail fast if Prometheus returned zero data for all queries
         if df.empty or df.dropna(how="all").empty:
             logger.warning(
-                f"No metric data returned from Prometheus for service '{service_name}'."
+                f"xxxxx #[No metric data returned from Prometheus for service '{service_name}'."
             )
             return pd.DataFrame()
 

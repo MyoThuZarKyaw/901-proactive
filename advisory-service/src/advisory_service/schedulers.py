@@ -22,15 +22,22 @@ async def predict_service_metrics():
     # correlation_id_ctx.set(uuid.uuid4().hex)
     logger.info("Predicting the status of services, started.")
     services_to_process = container.settings.PROMETHEUS_QUERY_SERVICE_NAMES
+    start_ts, end_ts = container.prometheus_query_service.get_prometheus_time_range(
+        minutes=15
+    )
     for service_name in services_to_process:
-        await predict_for_service(service_name=service_name)
+        await predict_for_service(
+            service_name=service_name, start_ts=start_ts, end_ts=end_ts
+        )
     logger.info("Predicting the status of services, done.")
 
 
 @with_correlation_subid(suffix_arg="service_name")
-async def predict_for_service(service_name):
-    logger.info(f"=======Predicting for the service name, {service_name}.")
-    event = await run_in_threadpool(do_prediction, service_name=service_name)
+async def predict_for_service(service_name, start_ts, end_ts):
+    logger.info(f"===== #[Predicting for the service name, {service_name}.")
+    event = await run_in_threadpool(
+        do_prediction, service_name=service_name, start_ts=start_ts, end_ts=end_ts
+    )
     if event is not None:
         logger.info(
             f"Service, {service_name}, is unhealthy and in {event.status} state."
@@ -54,11 +61,8 @@ async def predict_for_service(service_name):
     logger.info(f"Predicting for the service, {service_name}, completed.")
 
 
-def do_prediction(service_name) -> AdvisoryEvent:
+def do_prediction(service_name, start_ts, end_ts) -> AdvisoryEvent:
     # Get data from prometheus
-    start_ts, end_ts = container.prometheus_query_service.get_prometheus_time_range(
-        minutes=15
-    )
     df = container.prometheus_query_service.fetch_all_metrics(
         service_name=service_name, start_ts=start_ts, end_ts=end_ts
     )
@@ -85,7 +89,7 @@ def do_prediction(service_name) -> AdvisoryEvent:
     )
     logger.info("Prediction payload - %s", prediction_payload.model_dump_json())
     predicted_result = container.prediction_service.predict_health(prediction_payload)
-    logger.info("Prediction result - %s", predicted_result)
+    logger.info("***** #[Prediction result - %s", predicted_result)
 
     event = None
     if predicted_result.state in {
