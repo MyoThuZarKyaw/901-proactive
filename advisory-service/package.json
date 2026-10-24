@@ -4,7 +4,7 @@
   "private": true,
   "description": "npm script shortcuts for advisory-service Docker workflow (Python/FastAPI project; npm is used only as a command alias runner).",
   "scripts": {
-    "python:docker:build": "docker compose build",
+    "python:docker:dev": "docker compose build",
     "app-services:up": "docker compose -f app-services.yml up --wait",
     "app-services:advisory:up": "docker compose -f docker-compose.yml up --wait"
   }
