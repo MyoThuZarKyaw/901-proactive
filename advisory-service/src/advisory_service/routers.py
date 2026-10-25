@@ -4,6 +4,8 @@ from typing import Annotated
 import numpy as np
 from fastapi import APIRouter, Depends, Path, status
 
+from advisory_service.container import container
+
 from .config import Settings, get_settings
 from .dependencies import (
     get_prediction_service,
@@ -15,6 +17,7 @@ from .models import (
     AdviseResponse,
     AdvisoryEvent,
     PredictionInput,
+    PredictionOutput,
     PredictionOutputState,
 )
 from .services import PredictionService, PrometheusQueryService, RedisPublisherService
@@ -184,3 +187,61 @@ async def predict_metrics(
             )  # event="ADVISORY_EVENT_PUBLISHED",
         )
     return result
+
+
+@router.get(
+    "/prediction-payload/{service_name}/{start_ts}/{end_ts}",
+    summary="Get prediction payload for a time range",
+    response_model=PredictionInput,
+)
+async def get_prediction_payload(
+    service_name: Annotated[
+        str,
+        Path(
+            description="Service Name",
+        ),
+    ],
+    start_ts: Annotated[
+        int,
+        Path(
+            description="Start Timestamp",
+        ),
+    ],
+    end_ts: Annotated[
+        int,
+        Path(
+            description="End Timestamp",
+        ),
+    ],
+) -> PredictionInput:
+    df = container.prometheus_query_service.fetch_all_metrics(
+        service_name=service_name, start_ts=start_ts, end_ts=end_ts
+    )
+
+    # Check if we have data
+    if df.empty:
+        return f"No Metrics data for {service_name}({start_ts}, {end_ts})"
+
+    # Get the latest row as Pandas series (flat dictionary like {'target_cpu': 0.1061, 'target_mem': 0.883, 'target_latency': 7.81})
+    last_metric_row = df.iloc[-1].replace({np.nan: None}).to_dict()
+
+    # Prepare feature payload and predict
+    prediction_payload = PredictionInput(
+        service_name=service_name,
+        features=last_metric_row,
+        timestamp=last_metric_row["timestamp"],
+    )
+    logger.info("Prediction payload - %s", prediction_payload.model_dump_json())
+    return prediction_payload
+
+
+@router.post(
+    "/prediction-result",
+    summary="Get prediction payload for a time range",
+    response_model=PredictionOutput,
+)
+async def get_prediction_result(
+    prediction_payload: PredictionInput,
+) -> PredictionOutput:
+    predicted_result = container.prediction_service.predict_health(prediction_payload)
+    return predicted_result
