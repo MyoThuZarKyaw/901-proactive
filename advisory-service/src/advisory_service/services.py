@@ -107,8 +107,9 @@ class PrometheusQueryService:
                 f'avg(otel_process_cpu_usage{{application="{service_name}"}}) * 100'
             ),
             MetricKey.TARGET_MEM: (
-                f'sum(otel_jvm_memory_used_bytes{{application="{service_name}"}}) / '
-                f'sum(otel_jvm_memory_committed_bytes{{application="{service_name}"}})'
+                f'sum(otel_jvm_memory_used_bytes{{area="heap", application="{service_name}"}}) / '
+                f'sum(otel_jvm_memory_max_bytes{{area="heap", application="{service_name}"}} > 0)'
+                # f'sum(otel_jvm_memory_committed_bytes{{application="{service_name}"}})'
             ),
             MetricKey.TARGET_THROUGHPUT: (
                 f'sum(rate(otel_http_server_requests_milliseconds_count{{application="{service_name}"}}[{window}]))'
