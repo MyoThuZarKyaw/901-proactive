@@ -20,6 +20,7 @@ from .models import (
     PredictionOutput,
     PredictionOutputState,
 )
+from .schedulers import build_filtered_features
 from .services import PredictionService, PrometheusQueryService, RedisPublisherService
 
 logger = logging.getLogger(__name__)
@@ -228,7 +229,7 @@ async def get_prediction_payload(
     # Prepare feature payload and predict
     prediction_payload = PredictionInput(
         service_name=service_name,
-        features=last_metric_row,
+        features=build_filtered_features(last_metric_row, service_name),
         timestamp=last_metric_row["timestamp"],
     )
     logger.info("Prediction payload - %s", prediction_payload.model_dump_json())
