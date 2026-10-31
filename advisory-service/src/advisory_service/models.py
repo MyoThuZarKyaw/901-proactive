@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
@@ -92,8 +92,11 @@ class AdvisoryEvent(BaseModel):
     event_id: str = Field(..., description="Event ID")
     target_service: str = Field(..., description="Targeted service name")
     status: PredictionOutputState = Field(..., description="Degraded or Failed?")
+    confidence: float = Field(
+        ..., description="Model confidence score for the winning class (0.0 to 1.0)"
+    )
     reason: str = Field(None)  # Defaults to None (Optional)
-    timestamp: datetime = datetime.now(timezone.utc)
+    timestamp: datetime = datetime.now(UTC)
 
     @field_serializer("target_service")
     def serialize_target_service(self, v: str) -> str:

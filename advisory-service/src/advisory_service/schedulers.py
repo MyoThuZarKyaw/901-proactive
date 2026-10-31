@@ -142,5 +142,6 @@ def do_prediction(service_name, start_ts, end_ts) -> AdvisoryEvent:
             event_id=uuid.uuid4().hex,
             target_service=service_name,
             status=predicted_result.state,
+            confidence=predicted_result.confidence,
         )
     return event
