@@ -15,7 +15,7 @@ docker exec -it redis redis-cli ping
 docker exec -it redis redis-cli SUBSCRIBE circuit-breaker-channel
 
 # Publish message to "circuit-breaker-channel"
-docker exec -it redis redis-cli PUBLISH circuit-breaker-channel "payment-service"
+docker exec -it redis redis-cli PUBLISH circuit-breaker-channel '{"event_id":"3d7875baf6b94a9296011c20ed7d92ac","target_service":"order-service","status":"Failed","reason":null,"timestamp":"2026-10-31T10:23:46.355904Z"}'
 ```
 
 *Podman Commands*
